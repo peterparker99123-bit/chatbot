@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chatbot — Polished UI</title>
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="dark">
+  <div id="overlay" class="overlay" aria-hidden="true"></div>
+
+  <div class="container">
+    <aside class="sidebar" id="sidebar">
+      <button class="menu-btn" id="btnNewChat"><i class="fa-solid fa-plus"></i><span>New Chat</span></button>
+      <button class="menu-btn" id="btnSearchToggle"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></button>
+      <button class="menu-btn" id="btnSummaryToggle"><i class="fa-solid fa-lightbulb"></i><span>Summary</span></button>
+      <button class="menu-btn" id="btnClear"><i class="fa-solid fa-trash"></i><span>Clear Chat</span></button>
+      <button class="menu-btn" id="btnDownload"><i class="fa-solid fa-download"></i><span>Download</span></button>
+      <hr class="sep" />
+      
+      <!-- ADDED: Video/Image controls section (hidden by default) -->
+      <div id="mediaControlsSection" style="display:none;padding:12px;border-top:1px solid rgba(255,255,255,0.1);border-bottom:1px solid rgba(255,255,255,0.1);margin:8px 0;background:rgba(255,255,255,0.02);border-radius:8px;backdrop-filter:blur(8px);">
+        
+        <!-- Video Controls -->
+        <div id="videoControlsBlock" style="display:none;margin-bottom:12px;">
+          <div class="small" style="margin-bottom:8px;font-weight:600;">🎬 Video Controls</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <button class="menu-btn" id="btnPlayVideo" style="flex:1;padding:6px;font-size:12px;" title="Play"><i class="fa-solid fa-play"></i></button>
+            <button class="menu-btn" id="btnPauseVideo" style="flex:1;padding:6px;font-size:12px;" title="Pause"><i class="fa-solid fa-pause"></i></button>
+            <button class="menu-btn" id="btnMuteVideo" style="flex:1;padding:6px;font-size:12px;" title="Mute"><i class="fa-solid fa-volume-xmark"></i></button>
+          </div>
+          <div style="margin-bottom:8px;">
+            <label class="small">Timeline</label>
+            <input id="bgVideoTimeline" type="range" min="0" max="100" value="0" style="width:100%;height:6px;margin-top:4px;" />
+            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+              <span class="small" id="bgVideoTime">0:00</span>
+              <span class="small" id="bgVideoDuration">0:00</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <label class="small" style="min-width:50px;">Volume</label>
+            <input id="bgVideoVolume" type="range" min="0" max="100" value="100" style="flex:1;height:4px;" />
+            <span class="small" id="bgVideoVolumeVal">100%</span>
+          </div>
+          <button class="menu-btn" id="btnResetBgVideo" style="width:100%;margin-top:8px;padding:6px;font-size:12px;"><i class="fa-solid fa-trash"></i> Reset Video</button>
+        </div>
+
+        <!-- Image Crop Controls -->
+        <div id="imageCropControlsBlock" style="display:none;margin-bottom:12px;">
+          <div class="small" style="margin-bottom:8px;font-weight:600;">🖼️ Image Options</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="menu-btn" id="btnCropBgImage" style="flex:1;padding:6px;font-size:12px;"><i class="fa-solid fa-crop"></i> Crop</button>
+            <button class="menu-btn" id="btnResetBgImage" style="flex:1;padding:6px;font-size:12px;"><i class="fa-solid fa-trash"></i> Clear</button>
+          </div>
+        </div>
+
+        <!-- Audio Controls -->
+        <div id="audioControlsBlock" style="display:none;">
+          <div class="small" style="margin-bottom:8px;font-weight:600;">🔊 Background Audio</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <button class="menu-btn" id="btnAudioPrev" style="flex:1;padding:6px;font-size:12px;" title="Previous"><i class="fa-solid fa-backward-step"></i></button>
+            <button class="menu-btn" id="btnAudioPlay" style="flex:1;padding:6px;font-size:12px;" title="Play"><i class="fa-solid fa-play"></i></button>
+            <button class="menu-btn" id="btnAudioNext" style="flex:1;padding:6px;font-size:12px;" title="Next"><i class="fa-solid fa-forward-step"></i></button>
+          </div>
+          <div style="margin-bottom:8px;padding:8px;background:rgba(255,255,255,0.04);border-radius:6px;max-height:40px;overflow:hidden;">
+            <div class="small" id="currentAudioName" style="white-space:nowrap;text-overflow:ellipsis;overflow:hidden;">No audio</div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <label class="small">Timeline</label>
+            <input id="bgAudioTimeline" type="range" min="0" max="100" value="0" style="width:100%;height:6px;margin-top:4px;" />
+            <div style="display:flex;justify-content:space-between;margin-top:4px;">
+              <span class="small" id="bgAudioTime">0:00</span>
+              <span class="small" id="bgAudioDuration">0:00</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <label class="small" style="min-width:50px;">Volume</label>
+            <input id="bgAudioVolume" type="range" min="0" max="100" value="100" style="flex:1;height:4px;" />
+            <span class="small" id="bgAudioVolumeVal">100%</span>
+          </div>
+          <button class="menu-btn" id="btnResetBgAudio" style="width:100%;margin-top:8px;padding:6px;font-size:12px;"><i class="fa-solid fa-trash"></i> Clear Audio</button>
+        </div>
+      </div>
+
+      <hr class="sep" />
+      <button class="menu-btn" id="btnCreators"><i class="fa-solid fa-users"></i><span>Creators</span></button>
+    </aside>
+
+    <main class="app" id="mainApp">
+      <header>
+        <div class="brand">
+          <button class="header-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></button>
+          <div class="site-title">Chatbot</div>
+        </div>
+
+        <div class="header-actions">
+           <button class="menu-btn" id="btnProfile"><i class="fa-solid fa-user"></i></button>
+           <button class="menu-btn" id="btnSettings"><i class="fa-solid fa-gear"></i></button>
+        </div>
+      </header>
+
+      <div class="chat-wrap">
+        <section class="chat-container" id="chat"></section>
+      </div>
+
+      <div id="inputBox" class="input-box">
+        <input id="messageInput" placeholder="Type a message..." autocomplete="off" />
+        
+        <!-- FIXED: File upload button with proper label/input linkage -->
+        <label class="file-btn" for="fileInput" style="cursor:pointer;" title="Attach file">
+          <i class="fa-solid fa-plus"></i>
+        </label>
+        <input id="fileInput" type="file" accept="image/*,video/*,audio/*" style="display:none;" />
+        
+        <button class="file-btn" id="btnSend" title="Send"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </main>
+  </div>
+
+  <!-- PANELS -->
+  <div class="panel" id="profilePanel" aria-hidden="true">
+    <div class="panel-close"><button id="closeProfile" class="file-btn"><i class="fa-solid fa-times"></i></button></div>
+    <h3>Profile</h3>
+    <div class="profile-row">
+      <div id="avatarPreview" class="avatar"></div>
+      <div class="profile-fields">
+        <input type="text" id="profileName" placeholder="Name" />
+        <input type="email" id="profileEmail" placeholder="Email" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(8px);border-radius:8px;padding:8px;margin-top:8px;color:#fff;transition:all 0.3s ease;" />
+      </div>
+    </div>
+    <label class="file-btn" style="width:100%;"><i class="fa-solid fa-camera"></i> Upload Avatar
+      <input id="avatarUpload" type="file" accept="image/*" />
+    </label>
+    <button class="file-btn" id="btnRemoveAvatar" style="width:100%;display:none;"><i class="fa-solid fa-trash"></i> Remove Avatar</button>
+    <button class="file-btn" id="btnSaveProfile" style="width:100%;margin-top:12px;"><i class="fa-solid fa-save"></i> Save Profile</button>
+  </div>
+
+  <div class="panel" id="settingsPanel" aria-hidden="true">
+    <div class="panel-close"><button id="closeSettings" class="file-btn"><i class="fa-solid fa-times"></i></button></div>
+    <h3>Settings</h3>
+    
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="themeTab"><i class="fa-solid fa-palette"></i> Theme</button>
+      <button class="tab-btn" data-tab="appearanceTab"><i class="fa-solid fa-sliders"></i> Appearance</button>
+      <button class="tab-btn" data-tab="bgTab"><i class="fa-solid fa-image"></i> Background</button>
+      <button class="tab-btn" data-tab="ttsTab"><i class="fa-solid fa-volume-high"></i> TTS</button>
+    </div>
+
+    <!-- Theme Tab -->
+    <div id="themeTab" class="panel-section active">
+      <h4>Theme Mode</h4>
+      <div class="panel-actions">
+        <button class="file-btn theme-mode" data-mode="dark"><i class="fa-solid fa-moon"></i> Dark</button>
+        <button class="file-btn theme-mode" data-mode="light"><i class="fa-solid fa-sun"></i> Light</button>
+        <button class="file-btn theme-mode" data-mode="custom"><i class="fa-solid fa-palette"></i> Custom</button>
+      </div>
+      
+      <div id="darkThemeInfo" style="margin-top:12px;padding:12px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.3);border-radius:8px;display:none;pointer-events:none;">
+        <h5 style="margin-top:0;">Dark Theme (Fixed - Not Editable)</h5>
+        <div style="display:flex;gap:12px;margin-top:10px;">
+          <div style="flex:1;">
+            <p style="font-size:12px;margin:0 0 6px 0;color:rgba(255,255,255,0.6);">Primary</p>
+            <div style="width:100%;height:40px;background:#7c3aed;border-radius:6px;border:1px solid rgba(255,255,255,0.2);"></div>
+            <p style="font-size:12px;margin:6px 0 0 0;color:rgba(255,255,255,0.7);font-weight:600;">#7c3aed</p>
+          </div>
+          <div style="flex:1;">
+            <p style="font-size:12px;margin:0 0 6px 0;color:rgba(255,255,255,0.6);">Secondary</p>
+            <div style="width:100%;height:40px;background:#06b6d4;border-radius:6px;border:1px solid rgba(255,255,255,0.2);"></div>
+            <p style="font-size:12px;margin:6px 0 0 0;color:rgba(255,255,255,0.7);font-weight:600;">#06b6d4</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="lightThemeBlock" style="display:none;margin-top:12px;">
+        <h5 style="margin-top:0;">Light Theme Colors</h5>
+        <label>Primary Color</label>
+        <input type="color" id="lightPrimaryColor" value="#7c3aed" />
+        <label style="margin-top:8px;">Secondary Color</label>
+        <input type="color" id="lightSecondaryColor" value="#06b6d4" />
+      </div>
+
+      <div id="customBlock" style="display:none;margin-top:12px;">
+        <h5 style="margin-top:0;">Custom Theme Colors</h5>
+        <label>Primary Color</label>
+        <input type="color" id="primaryColor" value="#7c3aed" />
+        <label style="margin-top:8px;">Secondary Color</label>
+        <input type="color" id="secondaryColor" value="#06b6d4" />
+        <label style="margin-top:8px;"><input type="checkbox" id="enableBlend" /> Blend Gradient</label>
+        <label>Blend Angle</label>
+        <input type="range" id="blendAngle" min="0" max="360" value="135" />
+      </div>
+    </div>
+
+    <!-- Appearance Tab -->
+    <div id="appearanceTab" class="panel-section">
+      <h4>Chat Opacity</h4>
+      <div class="tts-row">
+        <input type="range" id="chatOpacity" min="0" max="100" value="85" />
+        <span id="chatOpacityVal">85%</span>
+      </div>
+      <h4 style="margin-top:12px;">Panel Opacity</h4>
+      <div class="tts-row">
+        <input type="range" id="panelOpacity" min="0" max="100" value="95" />
+        <span id="panelOpacityVal">95%</span>
+      </div>
+    </div>
+
+    <!-- Background Tab -->
+    <div id="bgTab" class="panel-section">
+      <h4>Background Media</h4>
+      <label class="file-btn" style="width:100%;"><i class="fa-solid fa-image"></i> Upload Image
+        <input id="bgImageUpload" type="file" accept="image/*" />
+      </label>
+      <label class="file-btn" style="width:100%;margin-top:8px;"><i class="fa-solid fa-video"></i> Upload Video
+        <input id="bgVideoUpload" type="file" accept="video/*" />
+      </label>
+      <!-- ADDED: Audio upload input -->
+      <label class="file-btn" style="width:100%;margin-top:8px;"><i class="fa-solid fa-music"></i> Upload Audio
+        <input id="bgAudioUpload" type="file" accept="audio/*" multiple />
+      </label>
+      <button class="file-btn" id="btnResetBg" style="width:100%;margin-top:8px;"><i class="fa-solid fa-trash"></i> Reset Background</button>
+    </div>
+
+    <!-- TTS Tab -->
+    <div id="ttsTab" class="panel-section">
+      <h4>Text-to-Speech</h4>
+      <label>Voice</label>
+      <select id="voiceSelect" style="width:100%;padding:8px;margin-top:8px;background:rgba(30,30,40,0.8);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:6px;"></select>
+      <label style="margin-top:12px;">Speech Rate</label>
+      <div class="tts-row">
+        <input type="range" id="ttsRate" min="0.5" max="2" step="0.1" value="1" />
+        <span id="ttsRateVal">1.0x</span>
+      </div>
+      <label>Pitch</label>
+      <div class="tts-row">
+        <input type="range" id="ttsPitch" min="0.5" max="2" step="0.1" value="1" />
+        <span id="ttsPitchVal">1.0</span>
+      </div>
+      <label style="margin-top:12px;">Test Sample</label>
+      <textarea id="ttsSample" placeholder="Enter text to test" style="width:100%;padding:8px;background:rgba(30,30,40,0.8);border:1px solid rgba(255,255,255,0.1);color:#fff;border-radius:6px;resize:vertical;min-height:80px;margin-top:8px;"></textarea>
+      <div class="panel-actions" style="margin-top:8px;">
+        <button class="file-btn" id="btnSpeak"><i class="fa-solid fa-play"></i> Speak</button>
+        <button class="file-btn" id="btnStopSpeak"><i class="fa-solid fa-stop"></i> Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="searchPanel" aria-hidden="true">
+    <div class="panel-close"><button id="closeSearch" class="file-btn"><i class="fa-solid fa-times"></i></button></div>
+    <h3>Search Messages</h3>
+    <input type="text" id="searchInput" placeholder="Search..." style="width:100%;padding:8px;margin-top:8px;" />
+    <div id="searchResults" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="panel" id="summaryPanel" aria-hidden="true">
+    <div class="panel-close"><button id="closeSummary" class="file-btn"><i class="fa-solid fa-times"></i></button></div>
+    <h3>Summary</h3>
+    <div id="summaryContent" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="panel" id="creatorsPanel" aria-hidden="true">
+    <div class="panel-close"><button id="closeCreators" class="file-btn"><i class="fa-solid fa-times"></i></button></div>
+    <h3>Creators</h3>
+    <ul class="creators-list">
+      <li> Pavan</li>
+      <li> Prasad</li>
+      <li> Teja</li>
+      <li> Shareef</li>
+    </ul>
+  </div>
+
+  <!-- CROP MODAL (ADDED) -->
+  <div id="cropModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:2500;flex-direction:column;gap:12px;padding:20px;">
+    <div class="crop-box" style="background:rgba(20,20,30,0.95);padding:20px;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow:auto;backdrop-filter:blur(12px);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 style="margin:0;">Crop Avatar</h3>
+        <button id="btnCropClose" class="file-btn" style="padding:6px;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <img id="cropImage" alt="Crop" style="max-width:100%;max-height:400px;display:block;margin:0 auto;"/>
+      <!-- ADDED: Rotate controls container -->
+      <div id="rotateControlsContainer" style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;"></div>
+      <div class="crop-actions" style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+        <button id="btnCropConfirm" class="file-btn"><i class="fa-solid fa-check"></i> Crop & Save</button>
+        <button id="btnCropCancel" class="file-btn"><i class="fa-solid fa-xmark"></i> Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Background Layers -->
+  <img id="bgImage" />
+  <video id="bgVideo" muted loop playsinline></video>
+  <audio id="bgAudio"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
